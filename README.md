@@ -13,7 +13,7 @@ sudo apt-get install realpath
 
 Once those packages are installed, you can go on installing the actual script.
 
-Therefore navigate into the directory the script should be safed in and type
+Therefore execute `isntall.sh` right **right where it is**:
 
 ```bash
 bash path/to/download/install.sh
