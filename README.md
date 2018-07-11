@@ -13,10 +13,11 @@ sudo apt-get install realpath
 
 Once those packages are installed, you can go on installing the actual script.
 
-Therefore execute `isntall.sh` right **right where it is**:
+Therefore, navigate into the downloaded folder `BaWaB` and execute `install.sh` **from there**::
 
 ```bash
-bash path/to/download/install.sh
+cd path/to/BaWaB/
+bash install.sh
 ```
 
 If everything went right, you should see a green message telling you to now set at least one variable.
