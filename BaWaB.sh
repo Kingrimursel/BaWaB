@@ -24,12 +24,20 @@ SHELL=/bin/bash
 PATH=/usr/local/bin:/usr/local/sbin:/sbin:/usr/sbin:/bin:/usr/bin:/usr/bin/X11
 
 #---------------------------------------------------------------------------------------------------------------#
+# Confirm installation
+if [ -z "$installed" ]; then
+    RED='\033[0;31m'
+    NC='\033[0m'
+    echo -e "${RED}Failed to run BaWaB, reason: The program is not installed yet.${NC}"
+    sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 6000 "Backup error" "Didn't properly install BaWaB yet."
+    exit 1
+fi
 
 # Setting up the log file
 
 # Logging
-start_session
-called_from $1
+log_start_session
+log_called_from $1
 
 # Declaring the array containing the Directories that should be backed up.
 declare -a backup_folders=("path/to/directory/one" "path/to/directory/two")
@@ -48,7 +56,7 @@ num_elements=$(ls -lR "${destination_folder}"/| grep ^d | wc -l)
 if [ ! -d "${destination_folder}"/BACKUP-"${date}" ]; then
     
     # Logging
-    already_exists "n"
+    log_already_exists "n"
     
     # Checking of the existing number of Backups is equal to the maximum you want. If you want another limit, change the '7' to your preferenced number.
     if (($num_elements == $saving_limit)); then
@@ -56,7 +64,7 @@ if [ ! -d "${destination_folder}"/BACKUP-"${date}" ]; then
 	oldest="$(ls -1t "${destination_folder}"/| tail -1)"
 	rm -r "${destination_folder}"/${oldest}
 	#Logging
-	dir_removed $oldest
+	log_dir_removed $oldest
     fi
 
     # Create a new Backup folder
@@ -68,29 +76,33 @@ if [ ! -d "${destination_folder}"/BACKUP-"${date}" ]; then
 	    tar -C ${folder%/*} -czf "${destination_folder}"/BACKUP-"${date}"/${folder##*/}.tar.gz ${folder##*/}
 	else
 	    # Sending a notification
-	    sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 8 "Backup error" "BaWaB: Folder \"${folder}\" doesn't exist"
+	    sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 6000 "Backup error" "BaWaB: Folder \"${folder}\" doesn't exist."
 	    # Logging
-	    backup_folder_exception $folder
+	    log_backup_folder_exception $folder
 	    # Removing bad folder from array
-	    to_delete=($folder)
-	    backup_folders=( "${backup_folders[@]/$delete}" )
+            for i in "${!backup_folders[@]}"; do
+                if [[ "${backup_folders[$i]}" = "${folder}" ]]; then
+                    unset 'backup_folders[$i]'
+                fi
+            done
 	fi
     done
     
     # Logging
-    dir_safed "${backup_folders[@]}"
+    log_dir_safed "${backup_folders[@]}"
     
     # Send a notification via cron and user.
-    sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 8 "Backup" "BaWaB complete."
-
-    # Logging
-    notify_send
+    if (( "${#backup_folders[@]}" > 0 )); then
+        sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 6000 "Backup" "BaWaB complete."
+    else
+        sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 6000 "Backup" "No backup directories added."
+    fi
 
 else 
     # Logging
-    already_exists "e"
+    log_already_exists "e"
 
 fi
 
 # Logging
-end_session
+log_end_session
