@@ -55,11 +55,6 @@ num_elements=$(ls "${destination_folder}"  -afq | wc -l)
 # If the queued Backup doesn't exist, keep going
 if [ ! -d "${destination_folder}"/BACKUP-"${date}" ] && [ ! -f "${destination_folder}"/BACKUP-"${date}"  ]; then
 
-    # Is element a directory
-    if [ -d "${destination_folder}"/BACKUP-"${date}" ]; then
-        is_dir = true
-    fi
-
     # Logging
     log_already_exists "n"
 
@@ -67,11 +62,7 @@ if [ ! -d "${destination_folder}"/BACKUP-"${date}" ] && [ ! -f "${destination_fo
     if (($num_elements == $saving_limit)); then
     # Remove the oldest Backup
         oldest="$(ls -1t "${destination_folder}"/| tail -1)"
-        if [ $is_dir = true ]; then
-            rm -r "${destination_folder}"/${oldest}
-        else
-            rm "${destination_folder}"/${oldest}
-        fi
+        rm -r "${destination_folder}"/${oldest}
 
         #Logging
         log_element_removed $oldest
