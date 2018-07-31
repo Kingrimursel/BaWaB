@@ -4,14 +4,14 @@
 
 # This program makes Backups of as much and any directories you want and safes them into a choosable destination directory. It also limits the number of Backups safed, so it deletes the oldest one if it tries to create a new one and notices that the limit is already reached.
 
-# If you want to run this script from crontab, you have to set the enviroment variables "DISPLAY" and "DBUS_SESSION_BUS_ADDRESS" in order to be notified when the Backup was made. They are already set(Ubuntu 18.04), but in case it doesn't work for you you'll have to change them. 
+# If you want to run this script from crontab, you have to set the enviroment variables "DISPLAY" and "DBUS_SESSION_BUS_ADDRESS" in order to be notified when the Backup was made. They are already set(Ubuntu 18.04), but in case it doesn't work for you you'll have to change them.
 
 # OPTIONAL CHANGES
 # If you want to change the limit of kept backups at once, change "$saving_limit" to whatever you want.
 # To manipulate the destination folder for the backups, change "$destination_folder".
 
 # REQUIRED CHANGES
-# To manipulate the folders that should be backed up, change "$backup_elements".
+# To manipulate the elements that should be backed up, change "$backup_elements".
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
@@ -50,58 +50,68 @@ saving_limit=7
 date=$(date '+%Y-%m-%d')
 
 # Getting the number of existing backups.
-num_elements=$(ls -lR "${destination_folder}"/| grep ^d | wc -l)
+num_elements=$(ls "${destination_folder}"  -afq | wc -l)
 
 # If the queued Backup doesn't exist, keep going
 if [ ! -d "${destination_folder}"/BACKUP-"${date}" ] && [ ! -f "${destination_folder}"/BACKUP-"${date}"  ]; then
-    
+
     # Is element a directory
-    is_dir = $(-d "${destination_folder}"/BACKUP-"${date}")
+    if [ -d "${destination_folder}"/BACKUP-"${date}" ]; then
+        is_dir = true
+    fi
 
     # Logging
     log_already_exists "n"
-    
-    # Checking of the existing number of Backups is equal to the maximum you want. If you want another limit, change the '7' to your preferenced number.
+
+    # Checking of the existing number of Backups is equal to the maximum you want. If you want another limit, change the '7' to your preffered number.
     if (($num_elements == $saving_limit)); then
     # Remove the oldest Backup
         oldest="$(ls -1t "${destination_folder}"/| tail -1)"
-        rm -r "${destination_folder}"/${oldest}
+        if [ $is_dir = true ]; then
+            rm -r "${destination_folder}"/${oldest}
+        else
+            rm "${destination_folder}"/${oldest}
+        fi
+
         #Logging
-        log_dir_removed $oldest
+        log_element_removed $oldest
     fi
 
     # Create a new Backup folder
     mkdir "${destination_folder}"/BACKUP-"${date}"
-    
-    # tar and gzip the directories that should be backed up and safe them.
-    for folder in "${backup_elements[@]}"; do
-        if [ -d $folder ]; then
-	    tar -C ${folder%/*} -czf "${destination_folder}"/BACKUP-"${date}"/${folder##*/}.tar.gz ${folder##*/}
-	else
-	    # Sending a notification
-	    sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 6000 "Backup error" "BaWaB: Folder \"${folder}\" doesn't exist."
-	    # Logging
-	    log_backup_folder_exception $folder
-	    # Removing bad folder from array
+
+    # tar and gzip the directories that should be backed up and safe them, of copy file.
+    for element in "${backup_elements[@]}"; do
+        if [ -d $element ]; then
+        tar -C ${element%/*} -czf "${destination_folder}"/BACKUP-"${date}"/${element##*/}.tar.gz ${element##*/}
+        elif [ -f $element ]; then
+            cp $element "$destination_folder"/BACKUP-"${date}"/"${element##*/}"
+    else
+        # Sending a notification
+        sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 6000 "Backup error" "BaWaB: Element \"${element}\" doesn't exist."
+        # Logging
+        log_backup_element_exception $element
+        # Removing bad element from array
             for i in "${!backup_elements[@]}"; do
-                if [[ "${backup_elements[$i]}" = "${folder}" ]]; then
+                if [[ "${backup_elements[$i]}" = "${element}" ]]; then
                     unset 'backup_elements[$i]'
                 fi
             done
-	fi
+    fi
     done
-    
+
     # Logging
     log_dir_safed "${backup_elements[@]}"
-    
+
     # Send a notification via cron and user.
     if (( "${#backup_elements[@]}" > 0 )); then
         sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 6000 "Backup" "BaWaB complete."
     else
         sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 6000 "Backup" "No backup directories added."
+        rm -r $destination_folder/BACKUP-"${date}"
     fi
 
-else 
+else
     # Logging
     log_already_exists "e"
 
