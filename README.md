@@ -1,5 +1,5 @@
 # BaWaB
-This is a shell script written in bash 4.4.19 which automatically updates as many directories as often as you want. 
+This is a shell script written in bash 4.4.19 which automatically updates as many directories as often as you want.
 Every execution will be logged in `BaWaB.log` and and thus easily comprehensible.
 Out of the box the script sets up a new cron job so the backup runs every hour, but the frequency easily be changed by manipulating the cron job.
 
@@ -21,7 +21,7 @@ bash install.sh
 ```
 
 If everything went right, you should see a green message telling you to now set at least one variable.
-The one variable you'll have to set is `backup_elements`, which tells the script the folder(s) that should actually be backed up.
+The one variable you'll have to set is `backup_elements`, which tells the script the elements(s) that should actually be backed up.
 To do that, navigate into `BaWaB.sh`, search for `backup_elements` and fill the array (and remove the examples).
 
 ### Personalize the script.
@@ -34,9 +34,9 @@ To do that, navigate into `BaWaB.sh`, search for `backup_elements` and fill the 
 
 #### Potentially occuring problems.
 There could occur some problems in ** combination with cronjob and notify-send**.
-You get a norification every time something gets backed up, and in order to do so notify-send needs two enviroment variables: `DISPLAY` and `DBUS_SESSION_BUS_ADDRESS`. 
+You get a norification every time something gets backed up, and in order to do so notify-send needs two enviroment variables: `DISPLAY` and `DBUS_SESSION_BUS_ADDRESS`.
 When cron runs the script, it doesn't know the variables by default so they get passed to cron by the script (`BaWaB.sh`).
-I set them matching for **Ubuntu 18.04**, if you dont get a notification you might want to set those matching yours. 
+I set them matching for **Ubuntu 18.04**, if you dont get a notification you might want to set those matching yours.
 
 Also the script automatically sets the `SHELL` variable and the `PATH` variable for cron. Since the shell needs to be bash i guess that one will stay, but in case something is not working with cron you might try to change `PATH`.
 
