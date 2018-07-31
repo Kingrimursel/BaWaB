@@ -9,7 +9,7 @@ mkdir $PWD/Backups
 # Create log file
 touch $PWD/BaWaB.log
 
-# Set the Log files
+# Set Log files
 sed -i "37i\source $PWD/write_log.sh" "$PWD/BaWaB.sh"
 sed -i "38i\exec 1>>$PWD/BaWaB.log 2>&1" "$PWD/BaWaB.sh"
 
