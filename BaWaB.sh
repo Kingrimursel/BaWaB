@@ -11,7 +11,7 @@
 # To manipulate the destination folder for the backups, change "$destination_folder".
 
 # REQUIRED CHANGES
-# To manipulate the folders that should be backed up, change "$backup_folders".
+# To manipulate the folders that should be backed up, change "$backup_elements".
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
@@ -40,7 +40,7 @@ log_start_session
 log_called_from $1
 
 # Declaring the array containing the Directories that should be backed up.
-declare -a backup_folders=("path/to/directory/one" "path/to/directory/two")
+declare -a backup_elements=("path/to/directory/one" "path/to/directory/two")
 
 # Declaring the folder where the Backups should be stored.
 
@@ -53,25 +53,28 @@ date=$(date '+%Y-%m-%d')
 num_elements=$(ls -lR "${destination_folder}"/| grep ^d | wc -l)
 
 # If the queued Backup doesn't exist, keep going
-if [ ! -d "${destination_folder}"/BACKUP-"${date}" ]; then
+if [ ! -d "${destination_folder}"/BACKUP-"${date}" ] && [ ! -f "${destination_folder}"/BACKUP-"${date}"  ]; then
     
+    # Is element a directory
+    is_dir = $(-d "${destination_folder}"/BACKUP-"${date}")
+
     # Logging
     log_already_exists "n"
     
     # Checking of the existing number of Backups is equal to the maximum you want. If you want another limit, change the '7' to your preferenced number.
     if (($num_elements == $saving_limit)); then
-        # Remove the oldest Backup
-	oldest="$(ls -1t "${destination_folder}"/| tail -1)"
-	rm -r "${destination_folder}"/${oldest}
-	#Logging
-	log_dir_removed $oldest
+    # Remove the oldest Backup
+        oldest="$(ls -1t "${destination_folder}"/| tail -1)"
+        rm -r "${destination_folder}"/${oldest}
+        #Logging
+        log_dir_removed $oldest
     fi
 
     # Create a new Backup folder
     mkdir "${destination_folder}"/BACKUP-"${date}"
     
     # tar and gzip the directories that should be backed up and safe them.
-    for folder in "${backup_folders[@]}"; do
+    for folder in "${backup_elements[@]}"; do
         if [ -d $folder ]; then
 	    tar -C ${folder%/*} -czf "${destination_folder}"/BACKUP-"${date}"/${folder##*/}.tar.gz ${folder##*/}
 	else
@@ -80,19 +83,19 @@ if [ ! -d "${destination_folder}"/BACKUP-"${date}" ]; then
 	    # Logging
 	    log_backup_folder_exception $folder
 	    # Removing bad folder from array
-            for i in "${!backup_folders[@]}"; do
-                if [[ "${backup_folders[$i]}" = "${folder}" ]]; then
-                    unset 'backup_folders[$i]'
+            for i in "${!backup_elements[@]}"; do
+                if [[ "${backup_elements[$i]}" = "${folder}" ]]; then
+                    unset 'backup_elements[$i]'
                 fi
             done
 	fi
     done
     
     # Logging
-    log_dir_safed "${backup_folders[@]}"
+    log_dir_safed "${backup_elements[@]}"
     
     # Send a notification via cron and user.
-    if (( "${#backup_folders[@]}" > 0 )); then
+    if (( "${#backup_elements[@]}" > 0 )); then
         sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 6000 "Backup" "BaWaB complete."
     else
         sudo -u $USER DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -u "normal" -t 6000 "Backup" "No backup directories added."

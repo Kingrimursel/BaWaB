@@ -21,8 +21,8 @@ bash install.sh
 ```
 
 If everything went right, you should see a green message telling you to now set at least one variable.
-The one variable you'll have to set is `backup_folders`, which tells the script the folder(s) that should actually be backed up.
-To do that, navigate into `BaWaB.sh`, search for `backup_folders` and fill the array (and remove the examples).
+The one variable you'll have to set is `backup_elements`, which tells the script the folder(s) that should actually be backed up.
+To do that, navigate into `BaWaB.sh`, search for `backup_elements` and fill the array (and remove the examples).
 
 ### Personalize the script.
 
