@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function log_start_session(){
-    echo -e "[INFO] BaWaB{ [\"Backup\", ["$(date '+%Y-%m-%d %H:%M:%S')"]], "
+    echo -e "[INFO] BaWaB{ [\"Backup\", ["$(date '+%Y-%m-%d %H:%M:%S')"]],"
 }
 
 function log_dir_safed(){
@@ -10,7 +10,7 @@ function log_dir_safed(){
     for element in "${elements[@]}"; do
         echo -n $element ", "
     done
-    echo "}, "
+    echo "},"
 }
 
 function log_end_session(){
@@ -19,22 +19,22 @@ function log_end_session(){
 }
 
 function log_element_removed(){
-    echo Element removed: "{{ $1 }, reason=7th element}, "
+    echo Element removed: "{{ $1 }, reason=7th element},"
 }
 
 function log_already_exists(){
     if [ "$1" = "e" ]; then
-        echo "Backup: already exists "
+        echo "Backup: already exists"
     else
-        echo "Backup: doesnt exist, "
+        echo "Backup: doesnt exist,"
     fi
 }
 
 function log_called_from(){
     if [ -z "$1" ]; then
-        echo "Called by: $USER,  "
+        echo "Called by: $USER,"
     else
-        echo "Called by: Crontab,  "
+        echo "Called by: Crontab,"
     fi
 }
 

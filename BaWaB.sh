@@ -50,7 +50,7 @@ saving_limit=7
 date=$(date '+%Y-%m-%d')
 
 # Getting the number of existing backups.
-num_elements=$(ls "${destination_folder}"  -afq | wc -l)
+num_elements=$(($( ls "$destination_folder" -afq | wc -l ) - 2 ))
 
 # If the queued Backup doesn't exist, keep going
 if [ ! -d "${destination_folder}"/BACKUP-"${date}" ] && [ ! -f "${destination_folder}"/BACKUP-"${date}"  ]; then
